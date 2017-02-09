@@ -2,7 +2,7 @@
 
 ## Description
 
-wspectrum is a program to co-add 1D-spectra taking into account velocity off-sets between them. It was designed to follow up the result of the [voffset](https://github.com/ezavarygin/voffset) software but can, of course, be used independently.
+The program is to co-add 1D-spectra taking into account velocity off-sets between them. It was designed to follow up the result of the [voffset](https://github.com/ezavarygin/voffset) software but can, of course, be used independently.
 
 ## Installation
 The software was written to work with `python 2.7`. 
