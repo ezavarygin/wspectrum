@@ -1,0 +1,170 @@
+#!/usr/bin/env python
+
+import matplotlib.pyplot as plt
+from astropy.io import fits
+import numpy as np
+import sys
+from barak import spec
+
+from functions.functions_weighted import *
+from functions.up_parse import Up_parse
+
+#===========================================================================================
+# CHECKS AND WELCOME
+
+# Put spectra into a list
+file_list = []
+for i in range(1,len(sys.argv)):
+  if sys.argv[i] != '--output' and sys.argv[i] != '--shift' and sys.argv[i] != "--anchor" and sys.argv[i] != "--plot":
+    file_list.append(sys.argv[i])
+  else: break
+
+# Welcome
+if len(file_list) == 0:
+  print ""
+  print "================================ wspectrum ========================================"
+  print ""
+  print " Usage:  wspectrum <list of spectra> [--anchor] [--output] [--shift]"
+  print ""
+  print "==================================================================================="
+  print ""
+  print " <list of spectra> ... : List of UVES_popler output files to co-add"
+  print ""
+  print "          --anchor ... : Followed with a path to the anchor spectrum. It is not"
+  print "          ............ : rebinned and its wavelength array is used as reference."
+  print "          --output ... : Followed with a name of the weighted spectrum."
+  print "          --shift .... : Followed with a path to the file with velocity off-sets."
+  print "          --plot ..... : Overplot all the spectra including the co-added one."
+  print "==================================================================================="
+  print ""
+  quit()
+
+# If --shift
+if '--shift' in sys.argv:
+  pass
+else:
+  print "======================================================="
+  print " Warning: no file with velocity off-sets was specified!"
+  print "======================================================="
+  quit()
+
+# If --anchor
+if '--anchor' in sys.argv:
+  pass
+else:
+  print "======================================================="
+  print " Warning: no anchor spectrum was specified!"
+  print "======================================================="
+  quit()
+
+# Make a dictionary + check if it contains all the files specified
+for i in range(1+len(file_list),len(sys.argv)):
+  if sys.argv[i] == '--shift':
+    # Create the dictionary with qso_names: offset
+    try:
+      shift_path = sys.argv[i+1]
+      qso_dict   = make_dict(shift_path)
+      check_list = [j.split('/')[-1] in qso_dict.keys() for j in file_list]
+      if not all(check_list):
+        print "============================================================================="
+        print " Warning: '{}' is not specified in '{}'".format(file_list[check_list.index(False)].split('/')[-1],\
+                                                   shift_path.split('/')[-1])
+        print "============================================================================="
+        quit()
+      else:
+        pass
+    except IndexError:
+      print "======================================================="
+      print " Warning: no file with velocity off-sets was specified!"
+      print "======================================================="
+      quit()
+  elif  sys.argv[i] == '--output':
+    try:
+      output_name = sys.argv[i+1]
+    except IndexError:
+      print "======================================================="
+      print " Warning: no output file name was specified!"
+      print "======================================================="
+      quit()
+  elif sys.argv[i] == '--anchor':
+    try:
+      anchor_path = sys.argv[i+1]
+    except IndexError:
+      print "======================================================="
+      print " Warning: no anchor file was specified!"
+      print "======================================================="
+      quit()
+  else:
+    pass
+
+
+# If --plot
+if '--plot' in sys.argv:
+  plot_yes = True
+else:
+  plot_yes = False
+
+# Find the anchor spectrum and remove it from the file_list
+#anchor_path = find_anchor(file_list,shift_path)
+if anchor_path in file_list:
+  file_list.remove(anchor_path)
+else:
+  pass
+
+#===========================================================================================
+# ALL GOOD -- WELCOME MESSAGE
+print ""
+print "========================= wspectrum =========================="
+print ""
+
+#===========================================================================================
+# PARSING FILES
+
+# Anchor spectrum --------------------------------------------------------------------------
+# Refering spectrum should be one with the biggest pixel size (disp).
+
+v_offset = qso_dict[anchor_path.split('/')[-1]]
+an_spec = Up_parse(anchor_path,-1*v_offset)
+print ' anchor spectrum: {}, shift = {} km/s'.format(an_spec.file_name,v_offset)
+an_spec.get_wl_array(file_list)
+
+# Create a list for the subsequent combining
+spectra = [spec.rebin(an_spec.wave,an_spec.flux,an_spec.error,wa=an_spec.wave_ext)]
+
+# Other spectra ----------------------------------------------------------------------------
+
+for file_i in file_list:
+  v_offset = qso_dict[file_i.split('/')[-1]]
+  i_spec   = Up_parse(file_i,-1*v_offset)
+  print ' tested spectrum: {}, shift = {} km/s'.format(i_spec.file_name,v_offset)
+  spectra.append(spec.rebin(i_spec.wave,i_spec.flux,i_spec.error,wa=an_spec.wave_ext))
+  # Plot if specified
+  if plot_yes:
+    plt.plot(i_spec.wave,i_spec.flux,linewidth=1.5)
+  else:
+    pass
+
+# Combine all the spectra
+w_spec = spec.combine(spectra)
+
+# Plot if specified
+if plot_yes:
+  plt.plot(an_spec.wave,an_spec.flux,'--',linewidth=3)
+  plt.plot(w_spec.wa,w_spec.fl,'k',linewidth=3)
+  plt.show()
+  plt.close()
+else:
+  pass
+
+
+# Re-assign the error array so that clipped pixels are now  large negative values
+w_spec.er = [-1.0E+9 if np.isnan(error) else error for error in w_spec.er]
+
+w_spec.write(output_name,overwrite=False)
+
+#===========================================================================================
+#ALL DONE
+print " ............................................................"
+print ""
+print " All done!"
+print "=============================================================="

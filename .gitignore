@@ -1,0 +1,9 @@
+*~
+*.pyc
+
+# my scripts
+script_*
+voffset_extend_setup.py
+
+# my spectra
+spectra/
