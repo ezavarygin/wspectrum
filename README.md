@@ -19,7 +19,7 @@ That is it, you can run it from any directory on your machine.
 
 ## Usage
 
-`wspectrum <list of spectra> [--anchor] [--output] [--shift]`
+`wspectrum <list of spectra> [--anchor] [--output] [--shift] [--group]`
 
 where:
 ```
@@ -29,9 +29,8 @@ where:
 Options:
 ```
 --anchor - followed with a path to the anchor spectrum. It is not rebinned and its wavelength array is used as reference.
-
 --output - followed with a name of the weighted spectrum.
-
 --shift  - followed with a path to the file with velocity off-sets.
+--group  - print to the screen spectra grouped by (decknames, binning); exit after printing.
 --plot   - overplot all the spectra including the co-added one.
 ```
