@@ -15,7 +15,7 @@ from functions.up_parse import Up_parse
 # Put spectra into a list
 file_list = []
 for i in range(1,len(sys.argv)):
-  if sys.argv[i] != '--output' and sys.argv[i] != '--shift' and sys.argv[i] != "--anchor" and sys.argv[i] != "--plot":
+  if sys.argv[i] != '--output' and sys.argv[i] != '--shift' and sys.argv[i] != '--group' and sys.argv[i] != "--anchor" and sys.argv[i] != "--plot":
     file_list.append(sys.argv[i])
   else: break
 
@@ -24,7 +24,7 @@ if len(file_list) == 0:
   print ""
   print "================================ wspectrum ========================================"
   print ""
-  print " Usage:  wspectrum <list of spectra> [--anchor] [--output] [--shift]"
+  print " Usage:  wspectrum <list of spectra> [--anchor] [--output] [--shift] [--group]"
   print ""
   print "==================================================================================="
   print ""
@@ -34,6 +34,8 @@ if len(file_list) == 0:
   print "          ............ : rebinned and its wavelength array is used as reference."
   print "          --output ... : Followed with a name of the weighted spectrum."
   print "          --shift .... : Followed with a path to the file with velocity off-sets."
+  print "          --group .... : Print to the screen spectra grouped by (decknames, binning);"
+  print "          ............ : exit after printing."
   print "          --plot ..... : Overplot all the spectra including the co-added one."
   print "==================================================================================="
   print ""
@@ -97,6 +99,12 @@ for i in range(1+len(file_list),len(sys.argv)):
   else:
     pass
 
+# If --group
+if '--group' in sys.argv:
+  group_print(file_list)
+  quit()
+else:
+  pass
 
 # If --plot
 if '--plot' in sys.argv:
